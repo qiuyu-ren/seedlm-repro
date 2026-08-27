@@ -1,0 +1,8 @@
+Independent re-implementation (nothing imported from seedlm/)
+
+(a) single fixed basis, exact coeffs : 0.7907 (spread 0.7900-0.7910)
+    theory sqrt((C-P)/C)             : 0.7906
+(b) 4-bit full search, rel.err        : 0.1243
+(b) 3-bit full search, rel.err        : 0.2240
+(c) mode=paper  mantissa codes used :  5/16   coeff rel.err 0.2980
+(c) mode=range  mantissa codes used : 15/16   coeff rel.err 0.0826

@@ -1,0 +1,90 @@
+SeedLM replication - validation report
+Shafipour et al., ICLR 2025, arXiv:2410.10714
+Implemented from the paper; no official code was released.
+
+==============================================================================
+1.  CLAIMS CHECKED DIRECTLY AGAINST THE PAPER
+==============================================================================
+  Figure 4 worked example V(4) reproduces exactly ......... True
+  Table 6 taps give maximal-length cycles (K=2..18) ....... True  [17/17]
+  Eq. 3 bit budget, Table 1 configurations:
+      4-bit: C= 8 P=3 K=16  ->  (16+4+4*3)/8 = 4 bits/element
+      3-bit: C=12 P=4 K=16  ->  (16+4+4*4)/12 = 3 bits/element
+  Section 3.3 pseudo-inverse cache (paper: 'at most 6.3MB'):
+      4-bit: U+ is (65535, 3, 8) = 6.29 MB fp32 / 3.15 MB fp16
+      3-bit: U+ is (65535, 4, 12) = 12.58 MB fp32 / 6.29 MB fp16
+
+==============================================================================
+2.  RECONSTRUCTION QUALITY ON SYNTHETIC WEIGHTS
+==============================================================================
+  Full search over all 65535 seeds, sigma = 0.02 (typical LLM scale).
+  config   distribution   rel.err       NMSE   blocks     time
+  4-bit    gaussian        0.1230    0.01513     2048     8.8s
+  4-bit    heavy           0.1255    0.01575     2048     7.7s
+  4-bit    mixture         0.1182    0.01397     2048     7.9s
+  3-bit    gaussian        0.2257    0.05094     1366     7.4s
+  3-bit    heavy           0.2341    0.05479     1366     9.6s
+  3-bit    mixture         0.2177    0.04739     1366     8.6s
+
+==============================================================================
+3.  WHAT THE SEED SEARCH ACTUALLY BUYS
+==============================================================================
+  Anchor - one fixed random basis, exact coefficients:
+      rel.err -> sqrt((C-P)/C) = 0.7906
+
+   seeds searched  seed bits   rel.err   basis only  quant. cost
+                1        0.0    0.7851       0.7825        1.00x
+                4        2.0    0.6586       0.6545        1.01x
+               16        4.0    0.5278       0.5226        1.01x
+               64        6.0    0.4027       0.3934        1.02x
+              256        8.0    0.3029       0.2902        1.04x
+             1024       10.0    0.2390       0.2237        1.07x
+             4096       12.0    0.1877       0.1720        1.09x
+            16384       14.0    0.1507       0.1338        1.13x
+            65535       16.0    0.1228       0.1072        1.15x
+
+  Searching 2^16 seeds instead of 1 reduces the error 6.39x.
+  'basis only' is the same seed with unquantised coefficients, so
+  the last column is what the 4-bit mantissas cost on top of it.
+
+==============================================================================
+4.  THE SHARED-EXPONENT RULE (Section 3.2)
+==============================================================================
+  'paper' is the rule exactly as printed, e = max_i floor(log2|t_i|).
+  'range' shifts it down so the 4-bit mantissas are actually used.
+
+  config   exponent rule     rel.err   mantissa codes used
+  4-bit    paper              0.1912             5 / 16
+  4-bit    range              0.1233            15 / 16
+  3-bit    paper              0.3030             5 / 16
+  3-bit    range              0.2239            15 / 16
+
+==============================================================================
+5.  DIAGNOSTIC - THE 4-BIT EXPONENT HAS AN ABSOLUTE RANGE
+==============================================================================
+  SeedLM has no per-tensor or per-channel scale, and e is stored in
+  4 bits, so e is confined to [-8, 7].  The method is therefore only
+  scale invariant while the coefficients stay inside that window.
+  Section 3.4 tunes (C,P,K) on standard-normal w (sigma=1), where the
+  window is comfortable; real weight tensors sit far lower.
+
+      sigma   rel.err      e range  % at floor  median cond(U) chosen
+      1e+00    0.1228       [-4,0]        0.0%                    2.3
+      1e-01    0.1226      [-7,-3]        0.0%                    2.4
+      2e-02    0.1219      [-8,-6]       45.9%                    2.4
+      1e-02    0.1288      [-8,-7]       97.5%                    2.4
+      1e-03    0.4132       [-8,5]       72.5%                    6.6
+      1e-04    0.5859       [-2,2]        0.0%               166630.0
+      1e-05    0.5807      [-4,-1]        0.0%               170101.0
+
+  Scale invariance would make every row identical; spread is 4.8x.
+  Median cond(U) over all 65535 seeds is 2.6.  Once the
+  exponent floor forces well-conditioned bases to quantise to zero, the
+  search is left picking near-singular ones, whose huge coefficients are
+  the only ones that survive - the method is outside its operating range.
+
+==============================================================================
+DONE
+==============================================================================
+  total wall clock: 79.8s
+  summary written to /home/claude/seedlm-repro/results/validation.json

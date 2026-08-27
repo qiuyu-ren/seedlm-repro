@@ -1,0 +1,4 @@
+*.py    text diff=python
+*.md    text
+*.json  text
+*.html  text

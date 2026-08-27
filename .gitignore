@@ -1,0 +1,14 @@
+# Model weights: large, and Meta/Qwen licensed -- never commit these.
+# Regenerate with `python3 extract_llama.py <checkpoint-dir> slices.safetensors`
+*.safetensors
+*.bin
+*.gguf
+*.pt
+
+# Local env / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env

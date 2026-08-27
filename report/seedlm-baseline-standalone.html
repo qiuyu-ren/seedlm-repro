@@ -1,0 +1,351 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><title>SeedLM's Missing Baseline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --ground:#fafafc; --raised:#ffffff; --sunken:#f2f2f7;
+  --ink:#16151e; --ink-2:#4a4857; --ink-3:#75738a;
+  --rule:#e2e1ec; --rule-2:#cfcedd;
+  --seed:#4f46b8; --seed-soft:#e9e7f7;
+  --base:#c07a12; --base-soft:#f8efdc;
+  --flag:#a1341f;
+  --shadow:0 1px 2px rgba(22,21,30,.05),0 8px 24px -12px rgba(22,21,30,.12);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#17171b; --raised:#1e1e24; --sunken:#131317;
+    --ink:#f0eff4; --ink-2:#b3b0c2; --ink-3:#87849a;
+    --rule:#2e2d36; --rule-2:#403e4c;
+    --seed:#8b82e8; --seed-soft:#25233a;
+    --base:#be8829; --base-soft:#302713;
+    --flag:#e0705a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#17171b; --raised:#1e1e24; --sunken:#131317;
+  --ink:#f0eff4; --ink-2:#b3b0c2; --ink-3:#87849a;
+  --rule:#2e2d36; --rule-2:#403e4c;
+  --seed:#8b82e8; --seed-soft:#25233a;
+  --base:#be8829; --base-soft:#302713;
+  --flag:#e0705a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Serif",Georgia,serif; font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px 96px}
+.col{max-width:640px}
+h1,h2,h3,.sans{font-family:"IBM Plex Sans",-apple-system,system-ui,sans-serif}
+.mono,code,th,td,.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1{font-size:clamp(2.1rem,5vw,3.15rem);line-height:1.06;font-weight:700;letter-spacing:-.024em;margin:0 0 20px;text-wrap:balance}
+h2{font-size:1.36rem;font-weight:600;letter-spacing:-.012em;margin:0 0 14px;text-wrap:balance}
+h3{font-size:1.02rem;font-weight:600;margin:0 0 8px}
+p{margin:0 0 18px}
+a{color:var(--seed)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--seed);outline-offset:3px;border-radius:2px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:.7rem;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);
+}
+header{padding:76px 0 0}
+.masthead{display:flex;flex-direction:column;gap:14px;padding-bottom:30px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.2rem;line-height:1.55;color:var(--ink-2);max-width:600px;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 22px;padding-top:22px;font-size:.76rem;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+section{padding-top:56px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:34px 0 0}
+.stat{background:var(--raised);padding:20px 22px 18px;display:flex;flex-direction:column;gap:5px}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:1.85rem;font-weight:500;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.stat .k{font-family:"IBM Plex Sans",sans-serif;font-size:.79rem;color:var(--ink-2);line-height:1.35}
+.stat.seed .v{color:var(--seed)} .stat.base .v{color:var(--base)}
+figure{margin:30px 0 0}
+figcaption{font-family:"IBM Plex Sans",sans-serif;font-size:.83rem;color:var(--ink-2);line-height:1.5;margin-top:14px;max-width:640px}
+.plot{background:var(--raised);border:1px solid var(--rule);padding:22px 22px 14px;box-shadow:var(--shadow);position:relative}
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;font-family:"IBM Plex Sans",sans-serif;font-size:.82rem}
+.lg{display:flex;align-items:center;gap:7px;color:var(--ink-2)}
+.sw{width:11px;height:11px;border-radius:50%;flex:none}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.tip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--ink);color:var(--ground);padding:7px 10px;font-size:.74rem;line-height:1.45;
+  font-family:"IBM Plex Mono",monospace;white-space:nowrap;z-index:5;border-radius:2px;
+}
+.tbl-scroll{overflow-x:auto;margin:26px 0 0;border:1px solid var(--rule);background:var(--raised)}
+table{border-collapse:collapse;width:100%;font-size:.83rem;min-width:520px}
+th{
+  font-family:"IBM Plex Sans",sans-serif;font-size:.71rem;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);text-align:right;padding:13px 16px;
+  border-bottom:1px solid var(--rule-2);white-space:nowrap;
+}
+th:first-child,td:first-child{text-align:left}
+td{padding:11px 16px;text-align:right;border-bottom:1px solid var(--rule);color:var(--ink-2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.hl td{background:var(--seed-soft);color:var(--ink);font-weight:500}
+td.win{color:var(--seed);font-weight:500}
+td.lose{color:var(--base)}
+.note{border-left:2px solid var(--rule-2);padding:2px 0 2px 20px;margin:26px 0 0;color:var(--ink-2);font-size:.96rem}
+.note strong{color:var(--ink);font-weight:600}
+.pull{
+  font-family:"IBM Plex Sans",sans-serif;font-size:1.15rem;line-height:1.5;font-weight:500;
+  color:var(--ink);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  padding:24px 0;margin:34px 0 0;max-width:620px;text-wrap:balance;
+}
+ul{margin:0 0 18px;padding-left:22px} li{margin-bottom:9px}
+.foot{margin-top:72px;padding-top:26px;border-top:1px solid var(--rule);font-size:.8rem;color:var(--ink-3);font-family:"IBM Plex Sans",sans-serif}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){body{font-size:16px}.wrap{padding:0 18px 64px}header{padding-top:48px}}
+</style>
+</head><body><div class="wrap">
+
+<header>
+  <div class="masthead">
+    <div class="eyebrow">Replication note &middot; BIBI group</div>
+    <h1>SeedLM's Missing Baseline</h1>
+    <p class="lede">SeedLM's headline is that it compresses LLM weights to 3&ndash;4 bits <em>without calibration data</em>, and still beats methods that use it. It never compares against another data-free method. Across 70 real weight tensors from two models, the simplest one wins on 67.</p>
+    <div class="meta">
+      <span>Llama-2-7B &middot; Qwen2.5-7B</span>
+      <span>70 tensors &middot; 7 projections &times; 5 depths &times; 2 models</span>
+      <span>32,768 weights each &middot; all 65,535 seeds</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat seed"><span class="v">0.1234<span style="font-size:.55em;color:var(--ink-3)"> / 0.1247</span></span><span class="k">SeedLM at 4.000 bits/weight<br>median error, Llama / Qwen</span></div>
+    <div class="stat base"><span class="v">0.1018<span style="font-size:.55em;color:var(--ink-3)"> / 0.1062</span></span><span class="k">Block floating point at 4.125 bits<br>median error, Llama / Qwen</span></div>
+    <div class="stat"><span class="v">3 / 70</span><span class="k">tensors where SeedLM wins &mdash; and one statistic predicts all three</span></div>
+  </div>
+</header>
+
+<section class="col">
+  <h2>What was measured</h2>
+  <p>SeedLM was reimplemented from the paper &mdash; no official code was released &mdash; and validated against Figure&nbsp;4, Table&nbsp;6, Eq.&nbsp;3 and the 6.3&nbsp;MB pseudo-inverse claim. It runs exactly as specified: block size <code>C=8</code>, latent dimension <code>P=3</code>, a 16-bit LFSR seed, an exhaustive search over all 65,535 candidate bases per block.</p>
+  <p>The baseline is <strong>block floating point</strong>: integer mantissas, one scale per group of 128, and a clipping threshold chosen to minimise squared error. It reads only the weights, so it is exactly as data-free as SeedLM. It is also the storage idea SeedLM uses for its own shared exponent &mdash; the paper cites the microscaling work for precisely that trick, then never runs it as a baseline.</p>
+  <p>Both models are sampled the same way: 7 projection types at 5 depths, taken as contiguous row slices so SeedLM's row-major block structure survives intact. Qwen contributes a genuinely different architecture &mdash; grouped-query attention, bf16, and roughly nine times Llama-2's training tokens.</p>
+</section>
+
+<section>
+  <div class="col"><h2>The result</h2>
+  <p>SeedLM sits in a tight band in both models. The baseline is better almost everywhere &mdash; and in Llama, twice, it falls apart completely.</p></div>
+
+  <figure>
+    <div class="plot">
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--seed)"></span>SeedLM &mdash; 4.000 bits</span>
+        <span class="lg"><span class="sw" style="background:var(--base)"></span>Block FP, group 128 &mdash; 4.125 bits</span>
+      </div>
+      <svg id="strip" viewBox="0 0 900 350" role="img" aria-label="Reconstruction error for 35 tensors from each of two models under both methods. SeedLM clusters tightly near 0.124 in both; block floating point clusters near 0.10 with two extreme outliers in Llama and none in Qwen."></svg>
+      <div class="tip" id="tip1"></div>
+    </div>
+    <figcaption>Each dot is one weight tensor. SeedLM's spread is identical in both models (&sigma;&nbsp;=&nbsp;0.0047). Block FP's collapses from &sigma;&nbsp;=&nbsp;0.0274 in Llama to 0.0070 in Qwen &mdash; the two catastrophic failures are a Llama phenomenon, not a general one. Hover any point.</figcaption>
+  </figure>
+
+  <div class="col">
+  <p class="pull">SeedLM is a fixed-rate coder that does not care what the weights look like. That is a real property, and it is not the property the paper claims.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col"><h2>The wrong explanation, and the right one</h2>
+  <p>From Llama alone the story looked obvious: SeedLM's two wins were the two most heavy-tailed tensors in the model, so a random basis must handle outliers better than a grid does. Qwen breaks that. Qwen is <em>more</em> heavy-tailed &mdash; median excess kurtosis 1.26 against Llama's 0.27, and 23 of 35 tensors above kurtosis 1 against Llama's 11 &mdash; and yet SeedLM does worse there, not better. The correlation with kurtosis flips sign between the two models.</p>
+  <p>What actually predicts it is not how fat the tail is, but whether the outliers are <strong>concentrated enough to wreck an individual quantization group</strong>. Measure that directly: within each group of 128 weights, take the largest magnitude divided by the group's RMS, and average over groups. A group-wise quantizer sets its step from the max and must represent the RMS, so this is the ratio it actually feels.</p></div>
+
+  <figure>
+    <div class="plot">
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--ink-3)"></span>Llama-2-7B &mdash; filled</span>
+        <span class="lg"><span class="sw" style="background:transparent;border:2px solid var(--ink-3)"></span>Qwen2.5-7B &mdash; hollow</span>
+        <span class="lg"><span class="sw" style="background:var(--seed)"></span>SeedLM wins</span>
+      </div>
+      <svg id="pair" viewBox="0 0 900 344" role="img" aria-label="Two scatter plots. Against excess kurtosis the margin shows no consistent relationship. Against mean group peak the relationship is clean and monotone, and separates the three SeedLM wins perfectly."></svg>
+      <div class="tip" id="tip2"></div>
+    </div>
+    <figcaption>Same 70 tensors, same vertical axis, two candidate predictors. Kurtosis correlates +0.29 within Llama but &minus;0.13 within Qwen &mdash; it does not survive a change of model. Mean group peak correlates +0.76 and +0.71 respectively, +0.73 pooled.</figcaption>
+  </figure>
+
+  <div class="col">
+  <div class="note"><strong>The separation is exact.</strong> Every tensor where SeedLM wins has a mean group peak between 3.87 and 6.24. Every tensor where it loses falls between 2.79 and 3.86. No overlap, across 70 tensors from two architectures. For scale, purely Gaussian weights score 2.83 &mdash; and 65 of the 70 real tensors sit below 3.2, which is to say that at the granularity a quantizer works on, almost all real weights are Gaussian.</div>
+  </div>
+</section>
+
+<section class="col">
+  <h2>Two objections, tested</h2>
+  <h3>Is the baseline just buying its win with extra bits?</h3>
+  <p>A scale costs 16 bits per group, so group&nbsp;128 is 4.125 bits against SeedLM's exact 4.000. Widening the group closes that gap to almost nothing and the ranking does not change.</p>
+  <div class="tbl-scroll"><table>
+    <thead><tr><th>Configuration</th><th>Bits/weight</th><th>Llama</th><th>Qwen</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>SeedLM (C=8, P=3, K=16)</td><td>4.000</td><td>0.1234</td><td>0.1247</td></tr>
+      <tr><td>Block FP, group 128</td><td>4.125</td><td>0.1018</td><td>0.1062</td></tr>
+      <tr><td>Block FP, group 512</td><td>4.031</td><td>0.1083</td><td>&mdash;</td></tr>
+      <tr><td>Block FP, per channel</td><td>4.004</td><td>0.1104</td><td>0.1183</td></tr>
+    </tbody>
+  </table></div>
+  <p style="margin-top:18px">At 4.004 bits &mdash; 0.1% above SeedLM's exact 4.000 &mdash; the baseline still wins on 30 of 35 Llama tensors. The margin is not bought with bits.</p>
+
+  <h3>Is SeedLM being crippled by its 4-bit exponent?</h3>
+  <p>SeedLM has no per-tensor scale and stores its shared exponent in 4 bits, so it is confined to <code>[-8, 7]</code>. A median of 63.5% of Llama blocks and 70.0% of Qwen blocks sit pinned to that floor, and one tensor reaches 99.1% &mdash; which looked like the obvious explanation. It isn't. Rescaling each tensor to unit standard deviation first, so the window never binds, moves the median from 0.1235 to 0.1231.</p>
+  <div class="note"><strong>A 0.4% effect.</strong> Only the tensor with 99.1% of blocks at the floor improves materially (0.1401 &rarr; 0.1240). SeedLM's roughly 20% deficit is intrinsic to the pseudo-random basis, not an artifact of the exponent spec. This overturns a prediction made from synthetic weights, where the floor looked far more dangerous than it turns out to be.</div>
+</section>
+
+<section class="col">
+  <h2>The honest counter-argument</h2>
+  <p>Reconstruction error is not perplexity, and here that caveat cuts in SeedLM's favour in a specific, testable way. The two tensors where uniform quantization collapses &mdash; <code>L0.attn.q_proj</code> and <code>L0.attn.k_proj</code> in Llama, at 0.227 and 0.211 against SeedLM's 0.119 and 0.123 &mdash; are early-layer attention projections with concentrated outliers, exactly the weights the quantization literature treats as accuracy-critical.</p>
+  <p>A method that is mediocre on all 35 tensors can beat one that is excellent on 33 and catastrophic on 2, if those 2 carry disproportionate weight in the loss. That would reconcile the paper's perplexity results with everything above, and it is checkable: quantize both ways and measure perplexity directly. It is also the argument the paper would need to make and doesn't &mdash; because it never runs the comparison at all.</p>
+  <p class="pull">The claim that survives is not &ldquo;SeedLM beats quantization.&rdquo; It is &ldquo;SeedLM's error is independent of the weight distribution,&rdquo; which is a genuine robustness property and a different, narrower paper.</p>
+</section>
+
+<section class="col">
+  <h2>What this means for BIBI</h2>
+  <ul>
+    <li><strong>The counting argument holds against SeedLM.</strong> A searched random basis does not beat a uniform grid at matched bits on well-behaved weights, and 65 of 70 real tensors are well-behaved at group granularity. Pointer-matching into an NLFSR sequence has no mechanism that would do better.</li>
+    <li><strong>There is a precise niche, and now a way to find it.</strong> Random-basis methods win above a mean group peak of roughly 4. That is a screening statistic: cheap to compute, architecture-independent, and it identifies the handful of tensors worth spending a different codec on. A hybrid &mdash; uniform quantization everywhere, random basis on the few concentrated-outlier tensors &mdash; is far more defensible than replacing quantization outright.</li>
+    <li><strong>Throughput is not a differentiator.</strong> The paper's 4&times; speedup follows from 16 bits &divide; 4 bits and the DDR burst width. Any 4-bit format reaches it; SeedLM pays 67K LUTs and 144 BRAMs of decompress logic to get there, where a block-FP dequantiser is a shift.</li>
+    <li><strong>The real opening is eliminating the read, not shrinking it.</strong> SeedLM still fetches 4 bits per weight from DRAM. On-chip generation from 3S is a different point on the curve &mdash; not 4&times; the bandwidth but asymptotically none &mdash; and that is a claim SeedLM structurally cannot make.</li>
+  </ul>
+</section>
+
+<div class="wrap foot" style="padding:26px 0 0;max-width:none">
+  Shafipour et al., <em>SeedLM: Compressing LLM Weights into Seeds of Pseudo-Random Generators</em>, ICLR 2025 (arXiv:2410.10714). Reimplemented from the paper; no official code was released. 56 validation assertions against the published algorithms; search results reproduced by a second implementation sharing no code with the first. Weights: <code>meta-llama/Llama-2-7b-hf</code> and <code>Qwen/Qwen2.5-7B</code>.
+</div>
+</div>
+<script>
+const DATA =
+[{"m":"L","n":"L0.mlp.down_proj","k":0.13,"gp":2.87,"sl":0.1234,"bf":0.1018,"mg":0.825},{"m":"L","n":"L0.mlp.gate_proj","k":0.21,"gp":2.87,"sl":0.124,"bf":0.1021,"mg":0.823},{"m":"L","n":"L0.mlp.up_proj","k":0.1,"gp":2.87,"sl":0.1237,"bf":0.1016,"mg":0.821},{"m":"L","n":"L0.attn.k_proj","k":36.01,"gp":5.49,"sl":0.1232,"bf":0.211,"mg":1.714},{"m":"L","n":"L0.attn.o_proj","k":28.44,"gp":3.71,"sl":0.1457,"bf":0.1275,"mg":0.875},{"m":"L","n":"L0.attn.q_proj","k":77.41,"gp":6.24,"sl":0.1189,"bf":0.2268,"mg":1.907},{"m":"L","n":"L0.attn.v_proj","k":1.17,"gp":2.96,"sl":0.1401,"bf":0.1056,"mg":0.754},{"m":"L","n":"L16.mlp.down_proj","k":0.04,"gp":2.84,"sl":0.1234,"bf":0.1008,"mg":0.817},{"m":"L","n":"L16.mlp.gate_proj","k":0.64,"gp":2.89,"sl":0.1231,"bf":0.1032,"mg":0.838},{"m":"L","n":"L16.mlp.up_proj","k":0.06,"gp":2.86,"sl":0.1233,"bf":0.1021,"mg":0.828},{"m":"L","n":"L16.attn.k_proj","k":0.91,"gp":2.86,"sl":0.1231,"bf":0.1016,"mg":0.825},{"m":"L","n":"L16.attn.o_proj","k":0.15,"gp":2.83,"sl":0.1233,"bf":0.1009,"mg":0.818},{"m":"L","n":"L16.attn.q_proj","k":0.76,"gp":2.81,"sl":0.1233,"bf":0.0994,"mg":0.806},{"m":"L","n":"L16.attn.v_proj","k":0.26,"gp":2.85,"sl":0.1229,"bf":0.1004,"mg":0.817},{"m":"L","n":"L23.mlp.down_proj","k":0.01,"gp":2.86,"sl":0.123,"bf":0.1013,"mg":0.824},{"m":"L","n":"L23.mlp.gate_proj","k":0.09,"gp":2.82,"sl":0.1225,"bf":0.1006,"mg":0.821},{"m":"L","n":"L23.mlp.up_proj","k":0.02,"gp":2.84,"sl":0.1236,"bf":0.101,"mg":0.817},{"m":"L","n":"L23.attn.k_proj","k":1.16,"gp":2.82,"sl":0.1253,"bf":0.1002,"mg":0.8},{"m":"L","n":"L23.attn.o_proj","k":0.13,"gp":2.86,"sl":0.1236,"bf":0.1021,"mg":0.826},{"m":"L","n":"L23.attn.q_proj","k":3.5,"gp":2.86,"sl":0.1254,"bf":0.1021,"mg":0.814},{"m":"L","n":"L23.attn.v_proj","k":0.06,"gp":2.82,"sl":0.1233,"bf":0.1008,"mg":0.818},{"m":"L","n":"L31.mlp.down_proj","k":0.18,"gp":2.91,"sl":0.1237,"bf":0.1038,"mg":0.839},{"m":"L","n":"L31.mlp.gate_proj","k":0.69,"gp":2.92,"sl":0.1231,"bf":0.1118,"mg":0.908},{"m":"L","n":"L31.mlp.up_proj","k":0.28,"gp":2.92,"sl":0.1232,"bf":0.1052,"mg":0.854},{"m":"L","n":"L31.attn.k_proj","k":1.72,"gp":2.93,"sl":0.1239,"bf":0.1067,"mg":0.861},{"m":"L","n":"L31.attn.o_proj","k":9.44,"gp":2.84,"sl":0.1231,"bf":0.1021,"mg":0.83},{"m":"L","n":"L31.attn.q_proj","k":1.09,"gp":2.96,"sl":0.1228,"bf":0.1093,"mg":0.89},{"m":"L","n":"L31.attn.v_proj","k":2.91,"gp":2.9,"sl":0.1237,"bf":0.1031,"mg":0.833},{"m":"L","n":"L8.mlp.down_proj","k":0.05,"gp":2.87,"sl":0.1237,"bf":0.1021,"mg":0.826},{"m":"L","n":"L8.mlp.gate_proj","k":0.27,"gp":2.85,"sl":0.1228,"bf":0.1014,"mg":0.826},{"m":"L","n":"L8.mlp.up_proj","k":0.05,"gp":2.82,"sl":0.1235,"bf":0.1007,"mg":0.815},{"m":"L","n":"L8.attn.k_proj","k":1.09,"gp":2.81,"sl":0.1236,"bf":0.1004,"mg":0.812},{"m":"L","n":"L8.attn.o_proj","k":0.26,"gp":2.79,"sl":0.124,"bf":0.0996,"mg":0.803},{"m":"L","n":"L8.attn.q_proj","k":0.99,"gp":2.83,"sl":0.1236,"bf":0.1001,"mg":0.81},{"m":"L","n":"L8.attn.v_proj","k":0.09,"gp":2.79,"sl":0.1238,"bf":0.0993,"mg":0.802},{"m":"Q","n":"L0.mlp.down_proj","k":1.34,"gp":3.12,"sl":0.1269,"bf":0.1093,"mg":0.861},{"m":"Q","n":"L0.mlp.gate_proj","k":156.18,"gp":3.86,"sl":0.1207,"bf":0.1006,"mg":0.833},{"m":"Q","n":"L0.mlp.up_proj","k":1.26,"gp":3.02,"sl":0.1254,"bf":0.1085,"mg":0.865},{"m":"Q","n":"L0.attn.k_proj","k":0.88,"gp":2.89,"sl":0.1232,"bf":0.1028,"mg":0.835},{"m":"Q","n":"L0.attn.o_proj","k":2.98,"gp":2.92,"sl":0.1266,"bf":0.1045,"mg":0.825},{"m":"Q","n":"L0.attn.q_proj","k":2.24,"gp":2.89,"sl":0.1245,"bf":0.1032,"mg":0.829},{"m":"Q","n":"L0.attn.v_proj","k":0.23,"gp":2.96,"sl":0.1372,"bf":0.1062,"mg":0.774},{"m":"Q","n":"L14.mlp.down_proj","k":1.63,"gp":3.01,"sl":0.1243,"bf":0.1074,"mg":0.864},{"m":"Q","n":"L14.mlp.gate_proj","k":2.88,"gp":3.04,"sl":0.1241,"bf":0.1103,"mg":0.889},{"m":"Q","n":"L14.mlp.up_proj","k":1.12,"gp":2.93,"sl":0.1241,"bf":0.1059,"mg":0.853},{"m":"Q","n":"L14.attn.k_proj","k":4.52,"gp":3.03,"sl":0.1402,"bf":0.1082,"mg":0.772},{"m":"Q","n":"L14.attn.o_proj","k":2.34,"gp":3.0,"sl":0.1248,"bf":0.109,"mg":0.873},{"m":"Q","n":"L14.attn.q_proj","k":3.9,"gp":2.96,"sl":0.133,"bf":0.1049,"mg":0.789},{"m":"Q","n":"L14.attn.v_proj","k":0.99,"gp":3.19,"sl":0.1264,"bf":0.1146,"mg":0.907},{"m":"Q","n":"L20.mlp.down_proj","k":15.25,"gp":2.94,"sl":0.1241,"bf":0.1052,"mg":0.847},{"m":"Q","n":"L20.mlp.gate_proj","k":1.05,"gp":2.94,"sl":0.1243,"bf":0.1041,"mg":0.838},{"m":"Q","n":"L20.mlp.up_proj","k":0.55,"gp":3.01,"sl":0.1241,"bf":0.1077,"mg":0.868},{"m":"Q","n":"L20.attn.k_proj","k":2.01,"gp":3.18,"sl":0.13,"bf":0.1139,"mg":0.877},{"m":"Q","n":"L20.attn.o_proj","k":5.53,"gp":2.87,"sl":0.1237,"bf":0.1019,"mg":0.824},{"m":"Q","n":"L20.attn.q_proj","k":0.87,"gp":2.99,"sl":0.1248,"bf":0.1066,"mg":0.854},{"m":"Q","n":"L20.attn.v_proj","k":1.03,"gp":3.1,"sl":0.1249,"bf":0.1109,"mg":0.888},{"m":"Q","n":"L27.mlp.down_proj","k":0.59,"gp":2.99,"sl":0.1248,"bf":0.1069,"mg":0.857},{"m":"Q","n":"L27.mlp.gate_proj","k":0.25,"gp":2.85,"sl":0.1241,"bf":0.1013,"mg":0.817},{"m":"Q","n":"L27.mlp.up_proj","k":0.22,"gp":2.9,"sl":0.1239,"bf":0.1034,"mg":0.834},{"m":"Q","n":"L27.attn.k_proj","k":2.87,"gp":2.93,"sl":0.1428,"bf":0.1039,"mg":0.727},{"m":"Q","n":"L27.attn.o_proj","k":3.04,"gp":2.91,"sl":0.1245,"bf":0.1045,"mg":0.839},{"m":"Q","n":"L27.attn.q_proj","k":1.77,"gp":2.95,"sl":0.1248,"bf":0.1053,"mg":0.844},{"m":"Q","n":"L27.attn.v_proj","k":3.26,"gp":3.87,"sl":0.1255,"bf":0.1427,"mg":1.137},{"m":"Q","n":"L7.mlp.down_proj","k":1.04,"gp":2.94,"sl":0.1244,"bf":0.105,"mg":0.844},{"m":"Q","n":"L7.mlp.gate_proj","k":0.56,"gp":2.91,"sl":0.1239,"bf":0.1047,"mg":0.845},{"m":"Q","n":"L7.mlp.up_proj","k":0.4,"gp":2.97,"sl":0.1243,"bf":0.1065,"mg":0.857},{"m":"Q","n":"L7.attn.k_proj","k":1.72,"gp":3.09,"sl":0.1265,"bf":0.111,"mg":0.877},{"m":"Q","n":"L7.attn.o_proj","k":1.14,"gp":2.87,"sl":0.1243,"bf":0.1018,"mg":0.818},{"m":"Q","n":"L7.attn.q_proj","k":0.87,"gp":3.15,"sl":0.1258,"bf":0.1154,"mg":0.917},{"m":"Q","n":"L7.attn.v_proj","k":0.9,"gp":3.03,"sl":0.1247,"bf":0.1082,"mg":0.867}];
+const css = n => getComputedStyle(document.body).getPropertyValue(n).trim();
+const NS = "http://www.w3.org/2000/svg";
+const el = (t,a) => { const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; };
+const MODEL = {L:"Llama-2-7B", Q:"Qwen2.5-7B"};
+
+function tip(box,node,html){
+  const t = box.querySelector(".tip");
+  node.addEventListener("pointerenter", ev => {
+    t.innerHTML = html; t.style.opacity = 1;
+    const r = box.getBoundingClientRect();
+    t.style.left = Math.min(Math.max(ev.clientX-r.left+12,4), r.width-t.offsetWidth-4)+"px";
+    t.style.top  = (ev.clientY-r.top-t.offsetHeight-10)+"px";
+  });
+  node.addEventListener("pointerleave", ()=> t.style.opacity=0);
+}
+
+/* ---- 1. error spread, faceted by model ------------------------------ */
+function strip(){
+  const svg=document.getElementById("strip"), box=svg.parentElement;
+  svg.textContent="";
+  const W=900,L=124,R=24,T=30;
+  const rows=[
+    {m:"L",k:"sl",y:74, label:"Llama · SeedLM",  c:css("--seed")},
+    {m:"L",k:"bf",y:140,label:"Llama · Block FP",c:css("--base")},
+    {m:"Q",k:"sl",y:214,label:"Qwen · SeedLM",   c:css("--seed")},
+    {m:"Q",k:"bf",y:280,label:"Qwen · Block FP", c:css("--base")},
+  ];
+  const lo=0.09,hi=0.235, x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
+  for(let v=0.10; v<=0.2351; v+=0.025){
+    svg.appendChild(el("line",{x1:x(v),x2:x(v),y1:T+4,y2:312,stroke:css("--rule"),"stroke-width":1}));
+    const t=el("text",{x:x(v),y:332,fill:css("--ink-3"),"font-size":12,"text-anchor":"middle","font-family":"IBM Plex Mono, monospace"});
+    t.textContent=v.toFixed(3); svg.appendChild(t);
+  }
+  svg.appendChild(el("line",{x1:L-108,x2:W-R,y1:177,y2:177,stroke:css("--rule-2"),"stroke-width":1}));
+  const ax=el("text",{x:W-R,y:18,fill:css("--ink-3"),"font-size":11.5,"text-anchor":"end","letter-spacing":"0.09em","font-family":"IBM Plex Sans, sans-serif"});
+  ax.textContent="RELATIVE RECONSTRUCTION ERROR →"; svg.appendChild(ax);
+
+  rows.forEach(r=>{
+    const lab=el("text",{x:L-16,y:r.y+5,fill:css("--ink-2"),"font-size":12.5,"text-anchor":"end","font-weight":600,"font-family":"IBM Plex Sans, sans-serif"});
+    lab.textContent=r.label; svg.appendChild(lab);
+    const set=DATA.filter(d=>d.m===r.m);
+    const vals=set.map(d=>d[r.k]).sort((a,b)=>a-b);
+    const med=vals[Math.floor(vals.length/2)];
+    svg.appendChild(el("line",{x1:x(med),x2:x(med),y1:r.y-24,y2:r.y+24,stroke:r.c,"stroke-width":2,"stroke-linecap":"round"}));
+    const mt=el("text",{x:x(med),y:r.y-30,fill:r.c,"font-size":11.5,"text-anchor":"middle","font-weight":500,"font-family":"IBM Plex Mono, monospace"});
+    mt.textContent=med.toFixed(4); svg.appendChild(mt);
+    const seen={};
+    set.forEach(d=>{
+      const v=d[r.k], key=Math.round(x(v));
+      seen[key]=(seen[key]||0)+1; const n=seen[key]-1;
+      const dy=(n%2?1:-1)*Math.ceil(n/2)*8;
+      const c=el("circle",{cx:x(v),cy:r.y+dy,r:4.6,fill:r.c,"fill-opacity":.82,stroke:css("--raised"),"stroke-width":2});
+      svg.appendChild(c);
+      tip(box,c,`<b>${d.n}</b> · ${MODEL[d.m]}<br>error ${v.toFixed(4)} &nbsp; group peak ${d.gp}`);
+    });
+    if(r.m==="L"&&r.k==="bf") set.filter(d=>d.bf>0.18).forEach(d=>{
+      const t=el("text",{x:x(d.bf),y:r.y+30,fill:css("--flag"),"font-size":11,"text-anchor":"middle","font-family":"IBM Plex Mono, monospace"});
+      t.textContent=d.n.replace("L0.attn.","L0 "); svg.appendChild(t);
+    });
+  });
+}
+
+/* ---- 2. two predictors side by side --------------------------------- */
+function pair(){
+  const svg=document.getElementById("pair"), box=svg.parentElement;
+  svg.textContent="";
+  const H=344,T=62,B=58,PW=396,GAP=64,L0=64;
+  const ylo=0.7,yhi=2.05, y=v=>H-B-(v-ylo)/(yhi-ylo)*(H-T-B);
+
+  const panels=[
+    {x0:L0, title:"EXCESS KURTOSIS", key:"k", log:true, lo:0.01, hi:200,
+     ticks:[[0.01,"0.01"],[0.1,"0.1"],[1,"1"],[10,"10"],[100,"100"]], note:"Llama +0.29 · Qwen −0.13"},
+    {x0:L0+PW+GAP, title:"MEAN GROUP PEAK", key:"gp", log:false, lo:2.6, hi:6.6,
+     ticks:[[3,"3"],[4,"4"],[5,"5"],[6,"6"]], note:"Llama +0.76 · Qwen +0.71"},
+  ];
+
+  panels.forEach((p,pi)=>{
+    const sx = v => p.log
+      ? p.x0+(Math.log10(Math.max(v,p.lo))-Math.log10(p.lo))/(Math.log10(p.hi)-Math.log10(p.lo))*PW
+      : p.x0+(Math.min(Math.max(v,p.lo),p.hi)-p.lo)/(p.hi-p.lo)*PW;
+
+    [0.8,1.0,1.2,1.4,1.6,1.8,2.0].forEach(v=>{
+      svg.appendChild(el("line",{x1:p.x0,x2:p.x0+PW,y1:y(v),y2:y(v),stroke:css("--rule"),"stroke-width":1}));
+      if(pi===0){
+        const t=el("text",{x:p.x0-12,y:y(v)+4,fill:css("--ink-3"),"font-size":11.5,"text-anchor":"end","font-family":"IBM Plex Mono, monospace"});
+        t.textContent=v.toFixed(1)+"×"; svg.appendChild(t);
+      }
+    });
+    p.ticks.forEach(([v,s])=>{
+      const t=el("text",{x:sx(v),y:H-B+22,fill:css("--ink-3"),"font-size":11.5,"text-anchor":"middle","font-family":"IBM Plex Mono, monospace"});
+      t.textContent=s; svg.appendChild(t);
+    });
+    const ti=el("text",{x:p.x0,y:38,fill:css("--ink-2"),"font-size":11.5,"letter-spacing":"0.09em","font-weight":600,"font-family":"IBM Plex Sans, sans-serif"});
+    ti.textContent=p.title; svg.appendChild(ti);
+    const nt=el("text",{x:p.x0,y:54,fill:css("--ink-3"),"font-size":11,"font-family":"IBM Plex Mono, monospace"});
+    nt.textContent="Spearman  "+p.note; svg.appendChild(nt);
+
+    svg.appendChild(el("line",{x1:p.x0,x2:p.x0+PW,y1:y(1),y2:y(1),stroke:css("--ink-2"),"stroke-width":1.5,"stroke-dasharray":"5 4"}));
+
+    DATA.forEach(d=>{
+      const win=d.mg>1, fill=win?css("--seed"):css("--ink-3");
+      const c=el("circle",{cx:sx(d[p.key]),cy:y(Math.min(d.mg,yhi)),r:5.4,
+        fill: d.m==="L"?fill:"none", "fill-opacity":.75,
+        stroke: d.m==="L"?css("--raised"):fill, "stroke-width":2});
+      svg.appendChild(c);
+      tip(box,c,`<b>${d.n}</b> · ${MODEL[d.m]}<br>kurtosis ${d.k} &nbsp; group peak ${d.gp}<br>margin ${d.mg}×`);
+      if(win && p.key==="gp"){
+        /* anchor inward near the panel edge so the label cannot overhang */
+        const px=sx(d.gp), near=px > p.x0+PW*0.82;
+        const t=el("text",{x: near?px-9:px, y:y(d.mg)-13, fill:css("--seed"),"font-size":11,
+          "text-anchor": near?"end":"middle","font-weight":500,"font-family":"IBM Plex Mono, monospace"});
+        t.textContent=d.n; svg.appendChild(t);
+      }
+    });
+    if(p.key==="gp"){
+      const g=el("text",{x:sx(2.83),y:H-B+40,fill:css("--ink-3"),"font-size":11,"text-anchor":"start","font-family":"IBM Plex Sans, sans-serif"});
+      g.textContent="↑ 2.83 = purely Gaussian weights"; svg.appendChild(g);
+      svg.appendChild(el("line",{x1:sx(2.83),x2:sx(2.83),y1:T+6,y2:H-B,stroke:css("--rule-2"),"stroke-width":1,"stroke-dasharray":"3 3"}));
+    }
+  });
+  const yl=el("text",{x:8,y:16,fill:css("--ink-3"),"font-size":11.5,"letter-spacing":"0.09em","font-family":"IBM Plex Sans, sans-serif"});
+  yl.textContent="BLOCK-FP ÷ SEEDLM — ABOVE 1.0, SEEDLM WINS"; svg.appendChild(yl);
+}
+
+function draw(){ strip(); pair(); }
+draw();
+addEventListener("resize", draw);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+</script>
+</body></html>

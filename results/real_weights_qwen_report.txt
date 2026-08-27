@@ -1,0 +1,107 @@
+loaded 35 real weight tensors from results/qwen_slices.safetensors   [Qwen2.5-7B]
+
+==================================================================================
+1.  WHAT DO REAL QWEN2.5-7B WEIGHTS ACTUALLY LOOK LIKE?
+==================================================================================
+  reference distributions used in the synthetic study:
+      Gaussian       excess kurtosis    -0.00   max/std    4.7
+      Student-t(4)   excess kurtosis   181.26   max/std   90.1
+      1% outliers    excess kurtosis    45.65   max/std   25.7
+
+  tensor                                             std  kurtosis  max/std
+  L0.mlp.down_proj.weight                        0.01362      1.34     13.1
+  L0.mlp.gate_proj.weight                        0.01514    156.18     39.5
+  L0.mlp.up_proj.weight                          0.01293      1.26     10.3
+  L0.self_attn.k_proj.weight                     0.02695      0.88      8.2
+  L0.self_attn.o_proj.weight                     0.01247      2.98     16.0
+  L0.self_attn.q_proj.weight                     0.01816      2.24     13.2
+  L0.self_attn.v_proj.weight                     0.00897      0.23      7.7
+  L14.mlp.down_proj.weight                       0.01642      1.63     22.7
+  L14.mlp.gate_proj.weight                       0.01660      2.88     32.5
+  L14.mlp.up_proj.weight                         0.01673      1.12     19.6
+  L14.self_attn.k_proj.weight                    0.01814      4.52     14.7
+  L14.self_attn.o_proj.weight                    0.01519      2.34     16.3
+  L14.self_attn.q_proj.weight                    0.01637      3.90     14.0
+  L14.self_attn.v_proj.weight                    0.01458      0.99     16.1
+  L20.mlp.down_proj.weight                       0.01690     15.25     60.1
+  L20.mlp.gate_proj.weight                       0.01644      1.05     15.3
+  L20.mlp.up_proj.weight                         0.01725      0.55     13.2
+  L20.self_attn.k_proj.weight                    0.01594      2.01     13.9
+  L20.self_attn.o_proj.weight                    0.01752      5.53     20.1
+  L20.self_attn.q_proj.weight                    0.01440      0.87     14.1
+  L20.self_attn.v_proj.weight                    0.01911      1.03      9.0
+  L27.mlp.down_proj.weight                       0.01607      0.59     14.8
+  L27.mlp.gate_proj.weight                       0.01699      0.25      9.4
+  L27.mlp.up_proj.weight                         0.01757      0.22     11.9
+  L27.self_attn.k_proj.weight                    0.01318      2.87     14.7
+  L27.self_attn.o_proj.weight                    0.01879      3.04     14.4
+  L27.self_attn.q_proj.weight                    0.01716      1.77     13.3
+  L27.self_attn.v_proj.weight                    0.02711      3.26     12.5
+  L7.mlp.down_proj.weight                        0.01588      1.04     21.9
+  L7.mlp.gate_proj.weight                        0.01721      0.56     13.2
+  L7.mlp.up_proj.weight                          0.01623      0.40     12.9
+  L7.self_attn.k_proj.weight                     0.01726      1.72     13.1
+  L7.self_attn.o_proj.weight                     0.01664      1.14     18.0
+  L7.self_attn.q_proj.weight                     0.01739      0.87     11.3
+  L7.self_attn.v_proj.weight                     0.01826      0.90      9.3
+
+  median excess kurtosis 1.26, range 0.22 to 156.18
+  weight std: median 0.01664, range 0.00897 to 0.02711
+
+==================================================================================
+2.  SEEDLM vs DATA-FREE BLOCK FLOATING POINT, MATCHED BITS
+==================================================================================
+  32768 weights per tensor, full 65535-seed search.
+  block-FP is g=128 with an MSE-optimal clip: 4.031 / 3.031 bits vs SeedLM's exact 4.000 / 3.000.
+
+  tensor                                      SL-4   BFP-4    SL-3   BFP-3  %floor
+  L0.mlp.down_proj.weight                   0.1269  0.1348  0.2291  0.2212   80.6%
+  L0.mlp.gate_proj.weight                   0.1207  0.1235  0.2217  0.2203   58.5%
+  L0.mlp.up_proj.weight                     0.1254  0.1361  0.2286  0.2260   82.8%
+  L0.self_attn.k_proj.weight                0.1232  0.1161  0.2249  0.2085   39.5%
+  L0.self_attn.o_proj.weight                0.1266  0.1250  0.2296  0.2185   89.1%
+  L0.self_attn.q_proj.weight                0.1245  0.1228  0.2262  0.2124   83.6%
+  L0.self_attn.v_proj.weight                0.1372  0.1427  0.2420  0.2307   98.5%
+  L14.mlp.down_proj.weight                  0.1243  0.1342  0.2277  0.2347   68.1%
+  L14.mlp.gate_proj.weight                  0.1241  0.1326  0.2276  0.2365   68.7%
+  L14.mlp.up_proj.weight                    0.1241  0.1326  0.2270  0.2304   69.9%
+  L14.self_attn.k_proj.weight               0.1402  0.1478  0.2466  0.2317   99.0%
+  L14.self_attn.o_proj.weight               0.1248  0.1267  0.2269  0.2285   74.8%
+  L14.self_attn.q_proj.weight               0.1330  0.1269  0.2366  0.2378   97.8%
+  L14.self_attn.v_proj.weight               0.1264  0.1352  0.2307  0.2293   85.1%
+  L20.mlp.down_proj.weight                  0.1241  0.1308  0.2279  0.2369   65.5%
+  L20.mlp.gate_proj.weight                  0.1243  0.1284  0.2260  0.2302   67.2%
+  L20.mlp.up_proj.weight                    0.1241  0.1291  0.2269  0.2365   63.1%
+  L20.self_attn.k_proj.weight               0.1300  0.1303  0.2347  0.2314   94.4%
+  L20.self_attn.o_proj.weight               0.1237  0.1233  0.2250  0.2224   64.8%
+  L20.self_attn.q_proj.weight               0.1248  0.1284  0.2276  0.2165   81.8%
+  L20.self_attn.v_proj.weight               0.1249  0.1326  0.2296  0.2444   65.2%
+  L27.mlp.down_proj.weight                  0.1248  0.1343  0.2282  0.2367   69.4%
+  L27.mlp.gate_proj.weight                  0.1241  0.1282  0.2255  0.2285   66.6%
+  L27.mlp.up_proj.weight                    0.1239  0.1252  0.2262  0.2317   59.7%
+  L27.self_attn.k_proj.weight               0.1428  0.1592  0.2490  0.2180   99.1%
+  L27.self_attn.o_proj.weight               0.1245  0.1226  0.2269  0.2248   55.4%
+  L27.self_attn.q_proj.weight               0.1248  0.1307  0.2272  0.2175   79.7%
+  L27.self_attn.v_proj.weight               0.1255  0.1608  0.2316  0.2747   18.9%
+  L7.mlp.down_proj.weight                   0.1244  0.1330  0.2272  0.2284   71.6%
+  L7.mlp.gate_proj.weight                   0.1239  0.1306  0.2264  0.2307   66.6%
+  L7.mlp.up_proj.weight                     0.1243  0.1325  0.2263  0.2309   70.0%
+  L7.self_attn.k_proj.weight                0.1265  0.1335  0.2292  0.2267   86.2%
+  L7.self_attn.o_proj.weight                0.1243  0.1231  0.2258  0.2199   66.3%
+  L7.self_attn.q_proj.weight                0.1258  0.1367  0.2290  0.2293   82.7%
+  L7.self_attn.v_proj.weight                0.1247  0.1354  0.2290  0.2322   72.4%
+
+  (869s)
+
+  4-bit: SeedLM wins on 28/35 tensors.  median SeedLM 0.1247 vs block-FP 0.1308 (1.05x)
+
+  3-bit: SeedLM wins on 18/35 tensors.  median SeedLM 0.2276 vs block-FP 0.2293 (1.01x)
+
+==================================================================================
+3.  IS THE 4-BIT EXPONENT FLOOR A REAL PROBLEM AT QWEN2.5-7B SCALE?
+==================================================================================
+  exponents used across all tensors: [-8, 7]  (representable range is [-8, 7])
+  blocks pinned to the floor: median 70.0%, worst tensor 99.1%
+  headroom below the smallest tensor std (0.00897): 2.2 octaves before the synthetic study's collapse point
+
+  written to /home/claude/seedlm-repro/results/real_weights_qwen2.5-7b.json
